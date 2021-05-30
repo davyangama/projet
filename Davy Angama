@@ -1,1 +1,144 @@
+<?php 
+    
+    //Fonctions du Panier
+    //Création du panier
+    function createMonPanier(){
 
+        if (isset($_SESSION['panier'])){
+
+        	$_SESSION['panier']=array();
+        	$_SESSION['panier']['descriptifArticle']=array();
+        	$_SESSION['panier']['prixArticle']=array();
+        	$_SESSION['panier']['nbArticle']=array();
+        	$_SESSION['panier']['lockPanier'] = false;
+        }
+
+        return true;
+
+    }
+
+    //Ajout d'un article 
+    function ajoutArticle($descriptifArticle,$prixArticle,$nbArticle){
+
+    	if (createMonPanier() && !estLock()){
+
+    		$position_article = array_search($descriptifArticle,$_SESSION['panier']['descriptifArticle']);
+
+    		if($position_article !== false){
+
+    			$_SESSION['panier']['descriptifArticle']['$pos_article'] += $nbArticle;
+
+    		}else{
+
+    			 array_push($_SESSION['panier']['descriptifArticle'],$descriptifArticle);
+    			 array_push($_SESSION['panier']['prixArticle'],$prixArticle);
+    			 array_push($_SESSION['panier']['nbArticle'],$nbArticle);
+
+    		}else{
+
+    			echo 'Erreur, demandez renseignement à l\'administrateur';
+    		}
+    	}
+    }
+
+
+    //Modification de la quanité d'article
+    function newNbArticle($descriptifArticle,$nbArticle){
+
+    	 if (createMonPanier() && !estLock()){
+
+    	if($nbArticle>0){
+
+    		$position_article = array_search($_SESSION['panier']['descriptifArticle']$descriptifArticle);
+
+    		if($position_article!==fasle){
+
+    			$_SESSION['panier']['descriptifArticle'][$pos_article] = $nbArticle;
+    		}
+    	}
+
+    }else{
+
+    	echo 'Erreur, demandez renseignement à l\'administrateur';
+    }
+
+
+    //Suppression d'un article 
+    function supprimArticle($descriptifArticle){
+
+    	if(createMonPanier) && !estLock()){
+
+              // Passage par panier temporaire
+	          $temporary = array();
+	          $temporary['descriptifArticle'] = array();
+	          $temporary['nbArticle'] = array(); 
+	          $temporary['prixArticle'] = array(); 
+	          $temporary['lockPanier'] = array();
+
+	          for($j = 0; $j<$_SESSION['panier']['descriptifArticle']); $j++){
+
+                  if($_SESSION['panier']['descriptifArticle'][$j] != $descriptifArticle){
+
+                  	 array_push($_SESSION['panier']['descriptifArticle'],$_SESSION['panier']['descriptifArticle'][$j]);
+    			     array_push($_SESSION['panier']['prixArticle'],$_SESSION['panier']['prixArticle'][$j]);
+    			     array_push($_SESSION['panier']['nbArticle'],$_SESSION['panier']['nbArticle'][$j]);
+                  }               
+            }  
+
+            $_SESSION['panier'] = $temporary; 
+
+            unset ($temporary); 
+
+        }else{
+
+        	echo 'Erreur, demandez renseignement à l\'administrateur'
+        }
+    }
+
+    //Verrouillage du panier 
+    function estLock(){
+
+    	if(isset($_SESSION['panier']) && $_SESSION['estLock']){
+
+    		return true; 
+    	}else{
+
+    		return false;
+    	}
+    }
+
+
+    //Suppression du panier 
+    function supprimPanier(){
+
+    	if(isset($_SESSION['panier'])){
+
+    		unset($_SESSION['panier']);
+    	}
+    }
+
+    //Comptabilisation des articles 
+    function countArticle(){
+
+    	if(isset($_SESSION['panier'])){
+
+    		return count($_SESSION['panier']['descriptifArticle'])
+
+    	}
+    }
+
+
+    //Calcul prix total 
+    function prixTot(){
+
+    	$total = 0;
+
+    	for($j = 0; $j<count($_SESSION['panier']['descriptifArticle']; j++)){
+
+    		$total += $_SESSION['panier']['nbArticle'][$j]*$_SESSION['panier']['prixArticle'];
+    	}
+
+    	return $total;
+    }
+
+?>
