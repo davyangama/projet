@@ -1,0 +1,170 @@
+<?php
+   
+//AFFICHAGE DU PANIER
+
+//Lancement d'une session
+//Connexion à la BDD
+
+session_start();
+include_once("PanierFonction.php");
+
+      //Identification de la BDD du projet 
+      $bdd = "projet webdyn";
+
+      //Connexion à la BDD
+      $bdd_handle = mysqli_connect('localhost', 'root', '');
+      $bdd_found = mysqli_select_db($bdd_handle, $bdd);
+
+      //Recuperation des articles dans la BDD avec $_SESSION['panier'] 
+      $IDtemporary = array();
+      $nomtemporary = array();
+
+      for ($j = 0; $j < count($_SESSION['panier']['ID']); $j++)
+      {
+         $IDtemporary[$j] = $_SESSION['panier']['ID'][$j];
+         $nomtemporary[$j] = $_SESSION['panier']['nom'][$j];
+      }
+
+
+
+
+
+
+//TRAITEMENT DES FONCTIONS DU PANIER
+// D'après le tutoriel : https://jcrozier.developpez.com/articles/web/panier/#LIII-A (source)
+
+$erreur = false;
+
+$action = (isset($_POST['action'])? $_POST['action']:  (isset($_GET['action'])? $_GET['action']:null )) ;
+if($action !== null)
+{
+   if(!in_array($action,array('ajout', 'suppression', 'actualisation_panier')))
+   $erreur=true;
+
+   //récupération des variables en POST ou GET
+   $q = (isset($_POST['q'])? $_POST['q']:  (isset($_GET['q'])? $_GET['q']:null )) ; 
+   $r = (isset($_POST['r'])? $_POST['r']:  (isset($_GET['r'])? $_GET['r']:null )) ;
+   $s = (isset($_POST['s'])? $_POST['s']:  (isset($_GET['s'])? $_GET['s']:null )) ;
+
+   //Suppression des espaces verticaux
+   $l = preg_replace('#\v#', '',$l);
+   //Vérification pour $r est un float
+   $r = floatval($r);
+
+   //On traite $s entier simple ou un tableau d'entiers
+    
+   if (is_array($s)){
+      $nbArticle = array();
+      $j=0;
+      foreach ($s as $contenu){
+         $nbArticle[$j++] = intval($contenu);
+      }
+   }
+   else
+   $s = intval($s);
+    
+}
+
+if (!$erreur){
+   switch($action){
+      Case "ajout":
+         ajoutArticle($q,$r,$s);
+         break;
+
+      Case "suppression":
+         supprimArticle($q);
+         break;
+
+      Case "actualisation_panier" :
+         for ($j = 0 ; $j < count($nbArticle) ; $j++)
+         {
+            newNbArticle($_SESSION['panier']['descriptifArticle'][$j],round($nbArticle[$j]));
+         }
+         break;
+
+      Default:
+         break;
+   }
+}
+
+
+
+
+echo '<?xml version="1.0" encoding="utf-8"?>';?>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="Mon panier.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+    </head>
+    <body>
+        <header class="header">
+            <nav class="navbar navbar-expand-lg fixed-top py-3">
+                <div class="container"><a href="#" class="navbar-brand text-uppercase font-weight-bold">ECE Marketplace </a>
+                            
+                    <div id="navbarSupportedContent" class="collapse navbar-collapse">
+                        <ul class="navbar-nav ml-auto">
+                                                
+                            <li class="nav-item"><a href="Accueil.html" class="nav-link text-uppercase font-weight-bold">Accueil</a></li>
+                            <li class="nav-item"><a href="Tout parcourir.html" class="nav-link text-uppercase font-weight-bold">Tout parcourir</a></li>
+                            <li class="nav-item"><a href="Notification.html" class="nav-link text-uppercase font-weight-bold">Notification</p></a></li>
+                            <li class="nav-item"><a href="MonCompte.html" class="nav-link text-uppercase font-weight-bold">Mon compte</a></li>
+                            <li id="nav-logo"><img src="https://www.ece.fr/lp/images/logo_ece.png" height="40px"></img></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <br><br><br><br><br><br><br>
+        <h1 style="color: #FFFFFF";><b>Mon panier</b></h1>
+    <tr>
+        <td colspan="3">Votre panier</td>
+    </tr>
+    <tr>
+        <td>Description de l'article</td>
+        <td>Quantité</td>
+        <td>Prix Total</td>
+        <td>Image</td>
+        <td>Catégorie</td>
+    </tr>
+
+
+
+
+ <?php
+    if (createMonPanier())
+    {
+       $nbArticle=count($_SESSION['panier']['descriptifArticle']);
+       if ($nbArticle <= 0)
+       echo "<tr><td>Votre panier est vide </ td></tr>";
+       else
+       {
+          for ($j=0 ;$j < $nbArticle ; $j++)
+          {
+             echo "<tr>";
+             echo "<td>".htmlspecialchars($_SESSION['panier']['descriptifArticle'][$j])."</ td>";
+             echo "<td><input type=\"text\" size=\"5\" name=\"s[]\" value=\"".htmlspecialchars($_SESSION['panier']['nbArticle'][$j])."\"/></td>";
+             echo "<td>".htmlspecialchars($_SESSION['panier']['prixArticle'][$j])."</td>";
+             echo "<td><a href=\"".htmlspecialchars("panier.php?action=suppression&l=".rawurlencode($_SESSION['panier']['descriptifArticle'][$j]))."\">XX</a></td>";
+             echo "</tr>";
+          }
+
+          echo "<tr><td colspan=\"5\"> </td>";
+          echo "<td colspan=\"3\">";
+          echo "Prix Total : ".prixTot();
+          echo "</td></tr>";
+
+          echo "<tr><td colspan=\"5\">";
+          echo "<input type=\"submit\" value=\"Actualiser\"/>";
+          echo "<input type=\"hidden\" name=\"action\" value=\"actualisation_panier\"/>";
+
+          echo "</td></tr>";
+       }
+    }
+    ?>
+</table>
+</form>
+</body>
+</html>
